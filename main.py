@@ -14,14 +14,11 @@ headers = {
     "X-RapidAPI-Key": "18cbd7bc5bmsh652e91d57f01727p1ec081jsn3258f190cd8e",
     "X-RapidAPI-Host": "google-search3.p.rapidapi.com"
 }
-
-
 # ---------- you tube
 
 
 def init_mongo():
-    client = MongoClient(
-        "mongodb+srv://ayrtongonsallo:madagascar@cluster0.am70a4l.mongodb.net/?retryWrites=true&w=majority")
+    client = MongoClient("mongodb+srv://ayrtongonsallo:madagascar@cluster0.am70a4l.mongodb.net/?retryWrites=true&w=majority")
     db = client.AllJudoPythonVideos
     return db
 
@@ -30,9 +27,10 @@ def getAPIKey():
     db = init_mongo()
     keys = db.Keys.find()
     listKeys = list(keys)
-    apiKey = listKeys[0]["youtube"]
-    print("MongoDB: clé 1 recupérée", apiKey)
+    apiKey=listKeys[0]["youtube"]
+    print("clé recupérée",apiKey)
     return apiKey
+
 
 
 apiKey = getAPIKey()
@@ -60,6 +58,7 @@ type = "any"
 # iteration
 '''for video in response.json()["items"]:
     print(video["id"], " url:", urls + video["id"]["videoId"])'''
+
 
 
 def getImages(keyword, total):
@@ -122,9 +121,7 @@ def getChannels(keyword, total):
             total))
     try:
         for data in response.json()["items"]:
-            results[i] = {'id': i, 'idchaine': data["snippet"]["channelId"], 'titre': data["snippet"]["title"],
-                          'description': data["snippet"]["description"],
-                          'image': data["snippet"]["thumbnails"]["default"]["url"]}
+            results[i] = {'id': i, 'idchaine': data["snippet"]["channelId"], 'titre': data["snippet"]["title"], 'description': data["snippet"]["description"], 'image': data["snippet"]["thumbnails"]["default"]["url"]}
             i += 1
     except Exception:
         return response.json()
@@ -143,8 +140,7 @@ def getAndSaveChannels(keyword, total):
                           'description': data["snippet"]["description"],
                           'image': data["snippet"]["thumbnails"]["default"]["url"]}
 
-            addChannel(data["snippet"]["description"], data["snippet"]["title"], data["snippet"]["channelId"],
-                       data["snippet"]["thumbnails"]["default"]["url"])
+            addChannel(data["snippet"]["description"],data["snippet"]["title"],data["snippet"]["channelId"],data["snippet"]["thumbnails"]["default"]["url"])
             i += 1
     except Exception:
         return response.json()
@@ -347,15 +343,14 @@ def deleteVideo(id):
     db = init_mongo()
     deletequery = {"id": int(id)}
     db.Videos.delete_one(deletequery)
-    deleted = dumps({"id": id}, indent=2)
+    deleted = dumps({"id":id}, indent=2)
     return deleted
-
 
 def deleteChannel(id):
     db = init_mongo()
     deletequery = {"id": int(id)}
-    chaine = db.Chaines.delete_one(deletequery)
-    deleted = dumps({"id": id}, indent=2)
+    chaine=db.Chaines.delete_one(deletequery)
+    deleted = dumps({"id":id}, indent=2)
     return deleted
 
 
@@ -365,8 +360,5 @@ class Video:
         self.url = url
 
 #        docker build -t alljudo-python-youtube-api .
-#docker images
-#docker tag ea64a7828595 registry.heroku.com/alljudo-python-youtube-api/web
-#docker push registry.heroku.com/alljudo-python-youtube-api/web
-#heroku container:release web -a alljudo-python-youtube-api
+
 

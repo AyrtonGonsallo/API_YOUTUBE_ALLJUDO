@@ -3,47 +3,33 @@ import os
 from flask import Flask, request
 from flask_cors import CORS, cross_origin
 import main
-from alljudoDatas import DataMysql
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 main.getAPIKey()
-dataMysql = DataMysql(1, None, None, None)
-
-
 @app.route("/")
 def home():
-    return '''
-    <h1>API ALLJUDO DE RECHERCHE YOUTUBE </h1>
-    <h4>Urls MongoDB</h4>
+    return '''<h1>API DE RECHERCHE YOUTUBE ET PYTHON</h1>
+    <h4>Urls</h4>
     <ul>
-        <li>getVideos <span style="color:red">recuperer l'ensemble des videos</span></li>
-        <li>getVideosByKeyword/keyword/total <span style="color:red">recuperer l'ensemble des videos par mot clé</span></li>
-        <li>getVideoDetailsById/id <span style="color:red">recuperer les infos d'une video</span></li>
-        <li>getChannelsVideos/total <span style="color:red">recuperer l'ensemble des videos de toutes les chaines</span></li>
-        <li>getChannelVideos/cid/total <span style="color:red">recuperer l'ensemble des videos d'une chaine</span></li>
-        <li>getChannelsByKeyword/keyword/total/save <span style="color:red">recuperer l'ensemble des chaines par mot clé et les sauvegarder ou pas</span></li>
-        <li>getGoogleSearchResultsByKeyword/keyword/total <span style="color:red">recuperer les resultats de google</span></li>
-        <li>getImagesByKeyword/keyword/total <span style="color:red">recuperer l'ensemble des images google</span></li>
-        <li>addChannel/description/titre/id/image <span style="color:red">ajouter une chaine</span></li>
-        <li>deleteVideo <span style="color:red">supprimer une video</span></li>
-        <li>deleteChannel <span style="color:red">supprimer une chaine</span></li>
-        <li>getStoredChannels <span style="color:red">recuperer l'ensemble des chaines sauvegardées</span></li>
-        <li>getStoredVideos <span style="color:red">recuperer l'ensemble des videos sauvegardées</span></li>
-        <li>postVideo <span style="color:red">ajouter une video</span></li>
-    </ul>
-    
-    <br><br>
-    
-    <h4>Urls Mysql</h4>
-    <ul>
-        <li>changeAPIKey/keyID <span style="color:red">change la clé d'api utilisée si le nombre de requettes autorisées est dépassé</span></li>
-        <li>getAPIKey <span style="color:red">Affiche la clé d'api courante</span></li>
-        <li>getMysqlStoredChannels <span style="color:red">recuperer l'ensemble des chaines sauvegardées</span></li>
-        <li>getMysqlStoredVideos <span style="color:red">recuperer l'ensemble des videos de suggestions sauvegardées</span></li>
-        <li>ajouterVideosSuggestions/total/save <span style="color:red">ajouter des videos de suggestions sauvegardées</span></li>
+    <li>getVideos <span style="color:red">recuperer l'ensemble des videos</span></li>
+    <li>getVideosByKeyword/keyword/total <span style="color:red">recuperer l'ensemble des videos par mot clé</span></li>
+    <li>getVideoDetailsById/id <span style="color:red">recuperer les infos d'une video</span></li>
+    <li>getChannelsVideos/total <span style="color:red">recuperer l'ensemble des videos de toutes les chaines</span></li>
+    <li>getChannelVideos/cid/total <span style="color:red">recuperer l'ensemble des videos d'une chaine</span></li>
+    <li>getChannelsByKeyword/keyword/total/save <span style="color:red">recuperer l'ensemble des chaines par mot clé et les sauvegarder ou pas</span></li>
+    <li>getGoogleSearchResultsByKeyword/keyword/total <span style="color:red">recuperer les resultats de google</span></li>
+    <li>getImagesByKeyword/keyword/total <span style="color:red">recuperer l'ensemble des images google</span></li>
+    <li>addChannel/description/titre/id/image <span style="color:red">ajouter une chaine</span></li>
+    <li>deleteVideo <span style="color:red">supprimer une video</span></li>
+    <li>deleteChannel <span style="color:red">supprimer une chaine</span></li>
+    <li>getStoredChannels <span style="color:red">recuperer l'ensemble des chaines sauvegardées</span></li>
+    <li>getStoredVideos <span style="color:red">recuperer l'ensemble des videos sauvegardées</span></li>
+    <li>postVideo <span style="color:red">ajouter une video</span></li>
 
+    
+    
     </ul>
     '''
 
@@ -51,22 +37,6 @@ def home():
 @app.route("/getVideos")
 def getVideos():
     return main.getVideos()
-
-
-@app.route("/changeAPIKey/<keyID>")
-@cross_origin()
-def changeAPIKey(keyID):
-    res = dataMysql.changekey(int(keyID))
-    if res == -1:
-        return "mauvaise valeur pour l'index de la clé"
-    else:
-        return "Clé Actuelle: " + str(dataMysql.apikey)
-
-
-@app.route("/getAPIKey")
-@cross_origin()
-def getAPIKey():
-    return "Clé Actuelle: " + str(dataMysql.apikey)
 
 
 @app.route("/getVideosByKeyword/<keyword>/<total>")
@@ -137,24 +107,6 @@ def getStoredVideos():
 @cross_origin()
 def getStoredChannels():
     return main.getStoredChannels()
-
-
-@app.route("/getMysqlStoredVideos")
-@cross_origin()
-def getMysqlStoredVideos():
-    return dataMysql.getMysqlStoredVideos()
-
-
-@app.route("/getMysqlStoredChannels")
-@cross_origin()
-def getMysqlStoredChannels():
-    return dataMysql.getMysqlStoredChannels()
-
-
-@app.route("/ajouterVideosSuggestions/<total>/<save>")
-@cross_origin()
-def ajouterVideosSuggestions(total,save):
-    return dataMysql.ajouterVideosSuggestions(int(total),int(save))
 
 
 # Endpoint pour la suppression d'une video
