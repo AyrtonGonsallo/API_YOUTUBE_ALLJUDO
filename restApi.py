@@ -9,7 +9,7 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 main.getAPIKey()
-dataMysql = DataMysql(1, None, None, None)
+dataMysql = DataMysql(4, None, None, None)
 
 
 @app.route("/")
@@ -30,6 +30,7 @@ def home():
         <li>deleteVideo <span style="color:red">supprimer une video</span></li>
         <li>deleteChannel <span style="color:red">supprimer une chaine</span></li>
         <li>getStoredChannels <span style="color:red">recuperer l'ensemble des chaines sauvegardées</span></li>
+        <li>getChannelsDetailsByIds/listeId <span style="color:red">recuperer les details des chaines dont les ids sont passé</span></li>
         <li>getStoredVideos <span style="color:red">recuperer l'ensemble des videos sauvegardées</span></li>
         <li>postVideo <span style="color:red">ajouter une video</span></li>
     </ul>
@@ -41,8 +42,10 @@ def home():
         <li>changeAPIKey/keyID <span style="color:red">change la clé d'api utilisée si le nombre de requettes autorisées est dépassé</span></li>
         <li>getAPIKey <span style="color:red">Affiche la clé d'api courante</span></li>
         <li>getMysqlStoredChannels <span style="color:red">recuperer l'ensemble des chaines sauvegardées</span></li>
-        <li>getMysqlStoredVideos <span style="color:red">recuperer l'ensemble des videos de suggestions sauvegardées</span></li>
+        <li>getMysqlStoredVideos <span style="color:red">recuperer l'ensemble des videos de suggestions sauvegardées dans la base</span></li>
         <li>ajouterVideosSuggestions/total/save <span style="color:red">ajouter des videos de suggestions sauvegardées</span></li>
+        <li>getChannelsVideosSuggestions/total/save <span style="color:red">recuperer l'ensemble des videos de suggestions et les sauvegarder ou pas</span></li>
+        <li>ajouterVideosRecentes/chaineID/total/save <span style="color:red">recuperer les dernieres videos des chaines suivies si chaineid=all ou de la chaine dont l'id est passé en parametre et les sauvegarder ou pas</span></li>
 
     </ul>
     '''
@@ -84,11 +87,19 @@ def getVideoDetailsById(id):
 
 # envoyer les ids de chaines dans le corps
 # ou les recuperer dans la base
-@app.route("/getChannelsVideos/<total>")
+@app.route("/getChannelsVideosSuggestions/<total>/<save>")
 @cross_origin()
-def getChannelsVideos(total):
-    return main.getChannelsVideos(total)
+def getChannelsVideosSuggestions(total, save):
+    return dataMysql.getChannelsVideosSuggestions(int(total), int(save))
 
+
+@app.route("/ajouterVideosRecentes/<chaineID>/<total>/<save>")
+@cross_origin()
+def ajouterVideosRecentes(total, chaineID, save):
+    if(chaineID=="all"):
+        return dataMysql.ajouterVideosRecentes(int(total), int(save))
+    else:
+        return dataMysql.ajouterVideosRecentesOneChannel(chaineID,int(total), int(save))
 
 @app.route("/getChannelVideos/<cid>/<total>")
 @cross_origin()
@@ -105,6 +116,12 @@ def getChannelsByKeyword(keyword, total, save):
         return main.getAndSaveChannels(keyword, total)
     else:
         return "3eme parametre invalide.\n Entrez 1 pour sauvegarder, 0 pour non"
+
+
+@app.route("/getChannelsDetailsByIds/<listeId>")
+@cross_origin()
+def getChannelsDetailsById(listeId):
+    return main.getChannelsDetails(listeId)
 
 
 @app.route("/getGoogleSearchResultsByKeyword/<keyword>/<total>")
@@ -153,8 +170,8 @@ def getMysqlStoredChannels():
 
 @app.route("/ajouterVideosSuggestions/<total>/<save>")
 @cross_origin()
-def ajouterVideosSuggestions(total,save):
-    return dataMysql.ajouterVideosSuggestions(int(total),int(save))
+def ajouterVideosSuggestions(total, save):
+    return dataMysql.ajouterVideosSuggestions(int(total), int(save))
 
 
 # Endpoint pour la suppression d'une video
