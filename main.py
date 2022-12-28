@@ -14,11 +14,14 @@ headers = {
     "X-RapidAPI-Key": "18cbd7bc5bmsh652e91d57f01727p1ec081jsn3258f190cd8e",
     "X-RapidAPI-Host": "google-search3.p.rapidapi.com"
 }
+
+
 # ---------- you tube
 
 
 def init_mongo():
-    client = MongoClient("mongodb+srv://ayrtongonsallo:madagascar@cluster0.am70a4l.mongodb.net/?retryWrites=true&w=majority")
+    client = MongoClient(
+        "mongodb+srv://ayrtongonsallo:madagascar@cluster0.am70a4l.mongodb.net/?retryWrites=true&w=majority")
     db = client.AllJudoPythonVideos
     return db
 
@@ -27,10 +30,9 @@ def getAPIKey():
     db = init_mongo()
     keys = db.Keys.find()
     listKeys = list(keys)
-    apiKey=listKeys[0]["youtube"]
-    print("clé recupérée",apiKey)
+    apiKey = listKeys[0]["youtube4"]
+    print("MongoDB: clé 1 recupérée", apiKey)
     return apiKey
-
 
 
 apiKey = getAPIKey()
@@ -58,7 +60,6 @@ type = "any"
 # iteration
 '''for video in response.json()["items"]:
     print(video["id"], " url:", urls + video["id"]["videoId"])'''
-
 
 
 def getImages(keyword, total):
@@ -95,22 +96,28 @@ def getGoogleSearchResultsByKeyword(keyword, total):
 
 
 def getVideoDetails(videoData):
-    response = requests.get(
-        racine_recherche_video + "?part=" + recherche_video_part + "&id=" + videoData["id"][
-            "videoId"] + "&key=" + apiKey
-    )
-    return response.json()["items"][0]["snippet"]
+    try:
+        response = requests.get(
+            racine_recherche_video + "?part=" + recherche_video_part + "&id=" + videoData["id"][
+                "videoId"] + "&key=" + apiKey
+        )
+        return response.json()["items"][0]["snippet"]
+    except Exception as err:
+        print("erreur recuperation details video",err)
 
 
 def getVideoDuration(videoData):
-    response = requests.get(
-        racine_recherche_video + "?part=" + recherche_video_part2 + "&id=" + videoData["id"][
-            "videoId"] + "&key=" + apiKey
-    )
-    duration = response.json()["items"][0]["contentDetails"]["duration"]
-    dur = isodate.parse_duration(duration)
-    # print(dur)
-    return dur
+    try:
+        response = requests.get(
+            racine_recherche_video + "?part=" + recherche_video_part2 + "&id=" + videoData["id"][
+                "videoId"] + "&key=" + apiKey
+        )
+        duration = response.json()["items"][0]["contentDetails"]["duration"]
+        dur = isodate.parse_duration(duration)
+        # print(dur)
+        return dur
+    except Exception as err:
+        print("Erreur recuperation duree video",err)
 
 
 def getChannels(keyword, total):
@@ -121,9 +128,42 @@ def getChannels(keyword, total):
             total))
     try:
         for data in response.json()["items"]:
-            results[i] = {'id': i, 'idchaine': data["snippet"]["channelId"], 'titre': data["snippet"]["title"], 'description': data["snippet"]["description"], 'image': data["snippet"]["thumbnails"]["default"]["url"]}
+            url='https://www.youtube.com/channel/'+data["snippet"]["channelId"]
+            results[i] = {'id': i, 'idchaine': data["snippet"]["channelId"], 'titre': data["snippet"]["title"],
+                          'description': data["snippet"]["description"],
+                          'datePub':data["snippet"]["publishTime"],
+                         'url':url,
+                          'image': data["snippet"]["thumbnails"]["default"]["url"]}
             i += 1
     except Exception:
+        if response.json()["error"]["code"] == 403:
+            return {"erreur": "limite journalière de requêtes autorisées par Youtube atteinte", "code": 403}
+        return response.json()
+    return json.dumps(list(results.items()))
+
+
+def getChannelsDetails(listeId):
+    results = {}
+    i = 0
+    response = requests.get(
+        racine_recherche_chaines + "?part=snippet&key=" + apiKey + "&id=" + listeId )
+    try:
+        for data in response.json()["items"]:
+            try:
+                url='https://www.youtube.com/c/'+data["snippet"]["customUrl"].replace("@","")
+            except Exception:
+                url='https://www.youtube.com/channel/'+data["id"]
+            results[i] = {'id': i, 'idchaine': data["id"],'titre': data["snippet"]["title"],
+                          'description': data["snippet"]["description"],
+                          'datePub':data["snippet"]["publishedAt"],
+                         'url':url,
+                          'image': data["snippet"]["thumbnails"]["default"]["url"].split("=")[0]}
+            i += 1
+    except Exception as err:
+        print("erreur",err)
+        if response.json()["error"]["code"] == 403:
+            return {"erreur": "limite journalière de requêtes autorisées par Youtube atteinte", "code": 403}
+
         return response.json()
     return json.dumps(list(results.items()))
 
@@ -140,9 +180,12 @@ def getAndSaveChannels(keyword, total):
                           'description': data["snippet"]["description"],
                           'image': data["snippet"]["thumbnails"]["default"]["url"]}
 
-            addChannel(data["snippet"]["description"],data["snippet"]["title"],data["snippet"]["channelId"],data["snippet"]["thumbnails"]["default"]["url"])
+            addChannel(data["snippet"]["description"], data["snippet"]["title"], data["snippet"]["channelId"],
+                       data["snippet"]["thumbnails"]["default"]["url"])
             i += 1
     except Exception:
+        if response.json()["error"]["code"] == 403:
+            return {"erreur": "limite journalière de requêtes autorisées par Youtube atteinte", "code": 403}
         return response.json()
     return json.dumps(list(results.items()))
 
@@ -220,7 +263,8 @@ def getChannelsVideos(total):
                               'duration': str(getVideoDuration(data)),
                               'image': videosInfos["thumbnails"]["default"]["url"], 'tags': tags,
                               'url': urls + data["id"]["videoId"], 'videoID': data["id"]["videoId"]}
-        except Exception:
+        except Exception as err:
+            print("erreur recuperation duree: ",err)
             return response.json()
     return json.dumps(list(results.items()))
 
@@ -250,29 +294,41 @@ def getVideosByKeyword(key, total):
                           'image': videosInfos["thumbnails"]["default"]["url"], 'tags': tags,
                           'url': urls + data["id"]["videoId"], 'videoID': data["id"]["videoId"]}
     except Exception:
+        if response.json()["error"]["code"] == 403:
+            return {"erreur": "limite journalière de requêtes autorisées par Youtube atteinte", "code": 403}
         return response.json()
     return json.dumps(list(results.items()))
 
 
 def getVideoDetailsById(id):
-    response = requests.get(
-        racine_recherche_video + "?part=" + recherche_video_part + "&id=" + id + "&key=" + apiKey
-    )
-    # pour la duree
-    response2 = requests.get(
-        racine_recherche_video + "?part=" + recherche_video_part2 + "&id=" + id + "&key=" + apiKey
-    )
-    duration = response2.json()["items"][0]["contentDetails"]["duration"]
-    dur = isodate.parse_duration(duration)
-    data = response.json()["items"][0]
-    videosInfos = response.json()["items"][0]["snippet"]
-    res = {'categorieId': videosInfos["categoryId"], 'channelId': videosInfos["channelId"],
-           'channelTitle': videosInfos["channelTitle"],
-           'description': videosInfos["description"], 'title': videosInfos["title"], 'duration': str(dur),
-           'image': videosInfos["thumbnails"]["default"]["url"],
-           'url': urls + data["id"], 'videoID': data["id"]}
+    try:
+        response = requests.get(
+            racine_recherche_video + "?part=" + recherche_video_part + "&id=" + id + "&key=" + apiKey
+        )
+        # pour la duree
+        response2 = requests.get(
+            racine_recherche_video + "?part=" + recherche_video_part2 + "&id=" + id + "&key=" + apiKey
+        )
+        duration = response2.json()["items"][0]["contentDetails"]["duration"]
+        dur = isodate.parse_duration(duration)
+        data = response.json()["items"][0]
+        videosInfos = response.json()["items"][0]["snippet"]
+        res = {'categorieId': videosInfos["categoryId"], 'channelId': videosInfos["channelId"],
+               'channelTitle': videosInfos["channelTitle"],
+               'description': videosInfos["description"], 'title': videosInfos["title"], 'duration': str(dur),
+               'image': videosInfos["thumbnails"]["default"]["url"],
+               'imagehigh': videosInfos["thumbnails"]["high"]["url"],
+               'url': urls + data["id"], 'videoID': data["id"]}
+    except Exception as err:
+        try:
+            errcode=response.json()["error"]["code"]
+        except KeyError:
+            errcode=None
+        if errcode == 403:
+            return {"erreur": "limite journalière de requêtes autorisées par Youtube atteinte", "code": 403}
+        return response.json()
 
-    return res
+    return {"res":res,"code":200}
 
 
 def loadData():
@@ -343,14 +399,15 @@ def deleteVideo(id):
     db = init_mongo()
     deletequery = {"id": int(id)}
     db.Videos.delete_one(deletequery)
-    deleted = dumps({"id":id}, indent=2)
+    deleted = dumps({"id": id}, indent=2)
     return deleted
+
 
 def deleteChannel(id):
     db = init_mongo()
     deletequery = {"id": int(id)}
-    chaine=db.Chaines.delete_one(deletequery)
-    deleted = dumps({"id":id}, indent=2)
+    chaine = db.Chaines.delete_one(deletequery)
+    deleted = dumps({"id": id}, indent=2)
     return deleted
 
 
@@ -360,5 +417,8 @@ class Video:
         self.url = url
 
 #        docker build -t alljudo-python-youtube-api .
-
+#docker images
+#docker tag dd61fafcfbea registry.heroku.com/alljudo-python-youtube-api/web
+#docker push registry.heroku.com/alljudo-python-youtube-api/web
+#heroku container:release web -a alljudo-python-youtube-api
 
