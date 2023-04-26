@@ -4,13 +4,14 @@ from flask import Flask, request
 from flask_cors import CORS, cross_origin
 import main
 from alljudoDatas import DataMysql
+from allmarathonDatas import DataMysql2
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 main.getAPIKey()
 dataMysql = DataMysql(4, None, None, None)
-
+dataMysql2 = DataMysql2(2, None, None, None)
 
 @app.route("/")
 def home():
@@ -46,6 +47,13 @@ def home():
         <li>ajouterVideosSuggestions/total/save <span style="color:red">ajouter des videos de suggestions sauvegardées</span></li>
         <li>getChannelsVideosSuggestions/total/save <span style="color:red">recuperer l'ensemble des videos de suggestions et les sauvegarder ou pas</span></li>
         <li>ajouterVideosRecentes/chaineID/total/save <span style="color:red">recuperer les dernieres videos des chaines suivies si chaineid=all ou de la chaine dont l'id est passé en parametre et les sauvegarder ou pas</span></li>
+        <li>changeAPIKey2/keyID <span style="color:red">change la clé d'api utilisée si le nombre de requettes autorisées est dépassé (sur allmarathon)</span></li>
+        <li>getAPIKey2 <span style="color:red">Affiche la clé d'api courante (sur allmarathon)</span></li>
+        <li>getMysqlStoredChannels2 <span style="color:red">recuperer l'ensemble des chaines sauvegardées (sur allmarathon)</span></li>
+        <li>getMysqlStoredVideos2 <span style="color:red">recuperer l'ensemble des videos de suggestions sauvegardées dans la base (sur allmarathon)</span></li>
+        <li>ajouterVideosSuggestions2/total/save <span style="color:red">ajouter des videos de suggestions sauvegardées (sur allmarathon)</span></li>
+        <li>getChannelsVideosSuggestions2/total/save <span style="color:red">recuperer l'ensemble des videos de suggestions et les sauvegarder ou pas (sur allmarathon)</span></li>
+        <li>ajouterVideosRecentes2/chaineID/total/save <span style="color:red">recuperer les dernieres videos des chaines suivies si chaineid=all ou de la chaine dont l'id est passé en parametre et les sauvegarder ou pas (sur allmarathon)</span></li>
 
     </ul>
     '''
@@ -66,10 +74,26 @@ def changeAPIKey(keyID):
         return "Clé Actuelle: " + str(dataMysql.apikey)
 
 
+@app.route("/changeAPIKey2/<keyID>")
+@cross_origin()
+def changeAPIKey2(keyID):
+    res = dataMysql2.changekey(int(keyID))
+    if res == -1:
+        return "mauvaise valeur pour l'index de la clé"
+    else:
+        return "Clé Actuelle: " + str(dataMysql2.apikey)
+
+
 @app.route("/getAPIKey")
 @cross_origin()
 def getAPIKey():
     return "Clé Actuelle: " + str(dataMysql.apikey)
+
+
+@app.route("/getAPIKey2")
+@cross_origin()
+def getAPIKey2():
+    return "Clé Actuelle: " + str(dataMysql2.apikey)
 
 
 @app.route("/getVideosByKeyword/<keyword>/<total>")
@@ -93,13 +117,29 @@ def getChannelsVideosSuggestions(total, save):
     return dataMysql.getChannelsVideosSuggestions(int(total), int(save))
 
 
+@app.route("/getChannelsVideosSuggestions2/<total>/<save>")
+@cross_origin()
+def getChannelsVideosSuggestions2(total, save):
+    return dataMysql2.getChannelsVideosSuggestions(int(total), int(save))
+
+
 @app.route("/ajouterVideosRecentes/<chaineID>/<total>/<save>")
 @cross_origin()
 def ajouterVideosRecentes(total, chaineID, save):
-    if(chaineID=="all"):
+    if (chaineID == "all"):
         return dataMysql.ajouterVideosRecentes(int(total), int(save))
     else:
-        return dataMysql.ajouterVideosRecentesOneChannel(chaineID,int(total), int(save))
+        return dataMysql.ajouterVideosRecentesOneChannel(chaineID, int(total), int(save))
+
+
+@app.route("/ajouterVideosRecentes2/<chaineID>/<total>/<save>")
+@cross_origin()
+def ajouterVideosRecentes2(total, chaineID, save):
+    if (chaineID == "all"):
+        return dataMysql2.ajouterVideosRecentes(int(total), int(save))
+    else:
+        return dataMysql2.ajouterVideosRecentesOneChannel(chaineID, int(total), int(save))
+
 
 @app.route("/getChannelVideos/<cid>/<total>")
 @cross_origin()
@@ -162,16 +202,34 @@ def getMysqlStoredVideos():
     return dataMysql.getMysqlStoredVideos()
 
 
+@app.route("/getMysqlStoredVideos2")
+@cross_origin()
+def getMysqlStoredVideos2():
+    return dataMysql2.getMysqlStoredVideos()
+
+
 @app.route("/getMysqlStoredChannels")
 @cross_origin()
 def getMysqlStoredChannels():
     return dataMysql.getMysqlStoredChannels()
 
 
+@app.route("/getMysqlStoredChannels2")
+@cross_origin()
+def getMysqlStoredChannels2():
+    return dataMysql2.getMysqlStoredChannels()
+
+
 @app.route("/ajouterVideosSuggestions/<total>/<save>")
 @cross_origin()
 def ajouterVideosSuggestions(total, save):
     return dataMysql.ajouterVideosSuggestions(int(total), int(save))
+
+
+@app.route("/ajouterVideosSuggestions2/<total>/<save>")
+@cross_origin()
+def ajouterVideosSuggestions2(total, save):
+    return dataMysql2.ajouterVideosSuggestions(int(total), int(save))
 
 
 # Endpoint pour la suppression d'une video
