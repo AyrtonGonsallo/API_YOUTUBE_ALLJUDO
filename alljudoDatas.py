@@ -23,9 +23,9 @@ class DataMysql:
     def init_mysql(self):
         cnx = mysql.connector.connect(
             host="109.234.166.148",
-            user="sc1mala2782_prod_allmarathon_user",
-            password="2%iG3mNfVbjnbctm",
-            database='sc1mala2782_prod_allmarathon'
+            user="sc2mala2782_alljudo",
+            password="9aitWY?%ot1P",
+            database='sc2mala2782_alljudo'
         )
         """cnx = mysql.connector.connect(
             host="localhost",
